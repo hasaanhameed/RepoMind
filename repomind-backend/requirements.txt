@@ -3,3 +3,7 @@ pydantic
 uvicorn
 pydantic-settings
 groq
+asyncpg 
+psycopg2-binary 
+sqlalchemy
+sentence-transformers
