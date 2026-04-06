@@ -6,3 +6,9 @@ class EmbedRequest(BaseModel):
 
 class EmbedResponse(BaseModel):
     message: str
+
+class SearchRequest(BaseModel):
+    query: str
+
+class SearchResponse(BaseModel):
+    results: list
