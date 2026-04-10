@@ -1,4 +1,5 @@
-from fastapi import FastAPI, CORSMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routes import chat, embedding
 
 app = FastAPI(title="RepoMind Backend")

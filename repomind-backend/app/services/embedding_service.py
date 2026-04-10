@@ -1,40 +1,33 @@
-from sentence_transformers import SentenceTransformer
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from app.database.connection import get_db
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_postgres.vectorstores import PGVector
+from app.core.config import settings
 
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Embedding model
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-#1. Convert code chunk to 384 dimensional vector
-def get_embedding(text_input: str) -> list:  
-    return embedding_model.encode(text_input).tolist()
+# Text splitter
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=50
+)
 
-#2. Store vector in database
-async def store_embedding(file_path: str, content: str, db: AsyncSession):
-    embedding = get_embedding(content)
-    await db.execute(
-        text("""
-            INSERT INTO code_chunks (file_path, content, embedding)
-            VALUES (:file_path, :content, :embedding)
-        """),
-        {"file_path": file_path, "content": content, "embedding": str(embedding)}
-    )
-    await db.commit()
+# PGVector store
+vector_store = PGVector(
+    connection=settings.DATABASE_URL,
+    embeddings=embeddings,
+    collection_name="code_chunks"
+)
 
+# 1. Load, split and store a file
+def store_file(file_path: str):
+    loader = TextLoader(file_path)
+    documents = loader.load()
+    chunks = text_splitter.split_documents(documents)
+    vector_store.add_documents(chunks)
 
-# Get similar chunks based on query 
-async def search_similar_chunks(query: str, db: AsyncSession, limit: int = 5) -> list:
-    query_embedding = get_embedding(query)
-    
-    result = await db.execute(
-        text("""
-            SELECT file_path, content
-            FROM code_chunks
-            ORDER BY embedding <-> :query_embedding
-            LIMIT :limit
-        """),
-        {"query_embedding": str(query_embedding), "limit": limit}
-    )
-    
-    rows = result.fetchall()
-    return [{"file_path": row[0], "content": row[1]} for row in rows]
+# 2. Search similar chunks
+def search_similar_chunks(query: str, limit: int = 5) -> list:
+    results = vector_store.similarity_search(query, k=limit)
+    return [{"file_path": doc.metadata["source"], "content": doc.page_content} for doc in results]

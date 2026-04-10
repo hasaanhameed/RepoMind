@@ -2,7 +2,6 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from app.core.config import settings
-from app.database.connection import AsyncSessionLocal
 from app.services.embedding_service import search_similar_chunks
 
 llm = ChatGroq(api_key=settings.GROQ_API_KEY, model="llama-3.3-70b-versatile")
@@ -10,8 +9,7 @@ llm = ChatGroq(api_key=settings.GROQ_API_KEY, model="llama-3.3-70b-versatile")
 conversation_history = []
 
 async def chat(message: str) -> str:
-    async with AsyncSessionLocal() as db:
-        relevant_chunks = await search_similar_chunks(message, db)
+    relevant_chunks = search_similar_chunks(message)
 
     context = "\n\n".join([
         f"File: {chunk['file_path']}\n{chunk['content']}"
