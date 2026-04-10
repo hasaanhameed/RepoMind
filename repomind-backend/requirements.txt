@@ -7,3 +7,5 @@ asyncpg
 psycopg2-binary 
 sqlalchemy
 sentence-transformers
+langchain 
+langchain-groq
