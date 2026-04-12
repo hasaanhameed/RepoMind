@@ -49,6 +49,7 @@ SUPPORTED_EXTENSIONS = {
 def clone_and_embed_repo(github_url: str) -> str:
     """Clones a GitHub repository and embeds all its code files into the vector database."""
     temp_dir = tempfile.mkdtemp()
+    
     try:
         Repo.clone_from(github_url, temp_dir)
         embedded_count = 0
