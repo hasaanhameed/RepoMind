@@ -1,6 +1,7 @@
 # Libraries for handling file operations
 import os
 import shutil
+import stat
 import tempfile
 
 # Library for cloning GitHub repositories
@@ -48,6 +49,7 @@ SUPPORTED_EXTENSIONS = {
 @tool
 def clone_and_embed_repo(github_url: str) -> str:
     """Clones a GitHub repository and embeds all its code files into the vector database."""
+    
     temp_dir = tempfile.mkdtemp()
     
     try:
@@ -62,4 +64,14 @@ def clone_and_embed_repo(github_url: str) -> str:
                     embedded_count += 1
         return f"Successfully embedded {embedded_count} files from {github_url}"
     finally:
-        shutil.rmtree(temp_dir)
+        def handle_remove_readonly(func, path, exc):
+            try:
+                os.chmod(path, stat.S_IWRITE)
+                func(path)
+            except Exception:
+                pass
+        
+        try:
+            shutil.rmtree(temp_dir, onexc=handle_remove_readonly)
+        except TypeError:
+            shutil.rmtree(temp_dir, onerror=handle_remove_readonly)
