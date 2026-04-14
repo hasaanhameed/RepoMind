@@ -5,6 +5,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from app.core.config import settings
 
+os.environ["HF_TOKEN"] = settings.HF_TOKEN
+
 # Embedding model
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
