@@ -4,6 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from app.core.config import settings
+import os
 
 os.environ["HF_TOKEN"] = settings.HF_TOKEN
 
