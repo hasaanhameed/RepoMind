@@ -40,3 +40,25 @@ async def signup(user: UserCreateRequest, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
     return {"message": "User created"}
+
+
+@router.post("/login")
+async def login(user: UserLoginRequest, db: AsyncSession = Depends(get_db)):
+
+    result = await db.execute(
+        text("SELECT * FROM users WHERE email = :email"),
+        {"email": user.email}
+    )
+    db_user = result.fetchone()
+
+    if not db_user or not verify_password(user.password, db_user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_access_token({
+        "sub": db_user.email
+    })
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }

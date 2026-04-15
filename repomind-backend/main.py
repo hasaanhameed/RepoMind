@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import chat, embedding, agent
+from app.routes import chat, embedding, agent, user
 
 app = FastAPI(title="RepoMind backend")
 
@@ -15,3 +15,4 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(embedding.router)
 app.include_router(agent.router)
+app.include_router(user.router)
