@@ -14,3 +14,4 @@ langchain-postgres
 langchain-core
 langgraph
 gitpython
+bcrypt
