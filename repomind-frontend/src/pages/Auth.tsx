@@ -23,16 +23,16 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="text-5xl font-mono font-semibold tracking-tighter text-foreground mb-3">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-12">
+          <h1 className="text-7xl font-raleway font-semibold tracking-tighter text-foreground mb-4">
             RepoMind
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Understand any repo in minutes.
           </p>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-base text-muted-foreground mb-8">
           {isLogin ? "Sign in to your account" : "Create a new account"}
         </p>
 
@@ -45,40 +45,40 @@ const Auth = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">
+              <label className="block text-sm text-muted-foreground mb-2">
                 Full Name
               </label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full bg-card border border-border rounded-md px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder="John Doe"
               />
             </div>
           )}
           <div>
-            <label className="block text-xs text-muted-foreground mb-1.5">
+            <label className="block text-sm text-muted-foreground mb-2">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full bg-card border border-border rounded-md px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-muted-foreground mb-1.5">
+            <label className="block text-sm text-muted-foreground mb-2">
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full bg-card border border-border rounded-md px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               placeholder="••••••••"
             />
           </div>
@@ -86,17 +86,17 @@ const Auth = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full bg-primary text-primary-foreground rounded-md py-4 text-base font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 mt-4"
           >
             {loading ? "Processing..." : (isLogin ? "Sign in" : "Create account")}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-foreground hover:underline underline-offset-2"
+            className="text-foreground font-semibold hover:underline underline-offset-2"
           >
             {isLogin ? "Sign up" : "Sign in"}
           </button>

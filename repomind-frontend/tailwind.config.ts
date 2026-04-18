@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+        raleway: ["var(--font-raleway)"],
       },
       colors: {
         border: "hsl(var(--border))",
