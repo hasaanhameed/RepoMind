@@ -21,18 +21,19 @@ text_splitter = RecursiveCharacterTextSplitter(
 vector_store = PGVector(
     connection=settings.DATABASE_URL,
     embeddings=embeddings,
-    collection_name="code_chunks"
+    collection_name="code_chunks",
+    async_mode=True
 )
 
 # 1. Load, split and store a file
-def store_file(file_path: str):
+async def store_file(file_path: str):
     loader = TextLoader(file_path)
     documents = loader.load()
     chunks = text_splitter.split_documents(documents)
     ids = [str(uuid.uuid4()) for _ in chunks]
-    vector_store.add_documents(chunks, ids=ids)
+    await vector_store.aadd_documents(chunks, ids=ids)
 
 # 2. Search similar chunks
-def search_similar_chunks(query: str, limit: int = 5) -> list:
-    results = vector_store.similarity_search(query, k=limit)
+async def search_similar_chunks(query: str, limit: int = 5) -> list:
+    results = await vector_store.asimilarity_search(query, k=limit)
     return [{"file_path": doc.metadata["source"], "content": doc.page_content} for doc in results]

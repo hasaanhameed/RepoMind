@@ -6,10 +6,10 @@ router = APIRouter(prefix="/embeddings", tags=["embeddings"])
 
 @router.post("/", response_model=EmbedResponse)
 async def embed_code(request: EmbedRequest):
-    store_file(request.file_path)
+    await store_file(request.file_path)
     return EmbedResponse(message="File embedded successfully")
 
 @router.post("/search", response_model=SearchResponse)
 async def search_code(request: SearchRequest):
-    results = search_similar_chunks(request.query)
+    results = await search_similar_chunks(request.query)
     return SearchResponse(results=results)

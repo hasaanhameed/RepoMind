@@ -16,3 +16,4 @@ langgraph
 gitpython
 bcrypt
 python-jose
+passlib
