@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const navigate = useNavigate();
+  
+  const { login, signup, loading, error } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/app");
+    if (isLogin) {
+      await login({ email, password });
+    } else {
+      const success = await signup({ name: fullName, email, password });
+      if (success) {
+        setIsLogin(true); // Switch to login after successful signup
+      }
+    }
   };
 
   return (
@@ -27,6 +35,12 @@ const Auth = () => {
         <p className="text-sm text-muted-foreground mb-6">
           {isLogin ? "Sign in to your account" : "Create a new account"}
         </p>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-md p-3 mb-6">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
@@ -71,9 +85,10 @@ const Auth = () => {
 
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground rounded-md py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {isLogin ? "Sign in" : "Create account"}
+            {loading ? "Processing..." : (isLogin ? "Sign in" : "Create account")}
           </button>
         </form>
 
