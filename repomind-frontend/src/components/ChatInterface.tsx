@@ -74,13 +74,34 @@ const ChatInterface = () => {
 
     try {
       const data = await sendMessage(userMessage, repoUrl);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          content: data.reply || "No response received.",
-        },
-      ]);
+      const fullReply = data.reply || "No response received.";
+      
+      // Add an empty AI message to begin the typing effect
+      setMessages((prev) => [...prev, { role: "ai", content: "" }]);
+      
+      let currentLength = 0;
+      const typeSpeed = 10; // ms per chunk
+      const charsPerTick = 3; // number of characters to add per tick for a smooth but fast feel
+
+      const typeInterval = setInterval(() => {
+        currentLength += charsPerTick;
+        const displayedText = fullReply.slice(0, currentLength);
+        
+        setMessages((prev) => {
+          const next = [...prev];
+          const lastIndex = next.length - 1;
+          if (lastIndex >= 0 && next[lastIndex].role === "ai") {
+            next[lastIndex] = { ...next[lastIndex], content: displayedText };
+          }
+          return next;
+        });
+        
+        if (currentLength >= fullReply.length) {
+          clearInterval(typeInterval);
+          setIsSending(false);
+        }
+      }, typeSpeed);
+
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -89,7 +110,6 @@ const ChatInterface = () => {
           content: `**Error:** ${err.response?.data?.detail || "Could not reach the server."}`,
         },
       ]);
-    } finally {
       setIsSending(false);
     }
   };

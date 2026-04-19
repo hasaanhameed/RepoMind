@@ -10,7 +10,7 @@ const ChatMessage = ({ role, content, file }: ChatMessageProps) => {
   const isUser = role === "user";
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 animate-message-in`}>
       <div
         className={`max-w-[75%] ${
           isUser
