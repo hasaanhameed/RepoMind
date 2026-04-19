@@ -17,3 +17,4 @@ gitpython
 bcrypt
 python-jose
 passlib
+redis

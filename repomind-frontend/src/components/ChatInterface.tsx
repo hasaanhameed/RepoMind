@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Github, Cpu, MessageSquare } from "lucide-react";
 import ChatMessage from "./ChatMessage";
-import { ingestRepo } from "@/api/agent";
+import { ingestRepo, getIngestionStatus } from "@/api/agent";
 import { sendMessage } from "@/api/chat";
 
 interface Message {
@@ -25,41 +25,82 @@ const ChatInterface = () => {
   const [isIngested, setIsIngested] = useState(false);
   const [showIngestionSuccess, setShowIngestionSuccess] = useState(false);
   const [ingestionStep, setIngestionStep] = useState(0);
+  const [ingestionProgress, setIngestionProgress] = useState(0);
+  const [ingestionStatusText, setIngestionStatusText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [ingestionError, setIngestionError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const ingestionInterval = useRef<ReturnType<typeof setInterval>>();
+  const pollingInterval = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Clean up intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (ingestionInterval.current) clearInterval(ingestionInterval.current);
+      if (pollingInterval.current) clearInterval(pollingInterval.current);
+    };
+  }, []);
+
+  const startPolling = (url: string) => {
+    if (pollingInterval.current) clearInterval(pollingInterval.current);
+    
+    pollingInterval.current = setInterval(async () => {
+      try {
+        const status = await getIngestionStatus(url);
+        setIngestionStatusText(status.message);
+        
+        if (status.status === "embedding") {
+          const percent = Math.round((status.current / status.total) * 100);
+          setIngestionProgress(10 + Math.floor(percent * 0.9)); // Cloning is ~10%, embedding is 90%
+        } else if (status.status === "cloning") {
+          setIngestionProgress(5);
+        } else if (status.status === "completed") {
+          setIngestionProgress(100);
+          setIsIngesting(false);
+          setIsIngested(true);
+          setShowIngestionSuccess(true);
+          if (pollingInterval.current) clearInterval(pollingInterval.current);
+          if (ingestionInterval.current) clearInterval(ingestionInterval.current);
+        } else if (status.status === "error") {
+          setIngestionError(status.message);
+          setIsIngesting(false);
+          if (pollingInterval.current) clearInterval(pollingInterval.current);
+          if (ingestionInterval.current) clearInterval(ingestionInterval.current);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 1500);
+  };
 
   const handleIngest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!repoUrl.trim()) return;
 
     setIsIngesting(true);
-    setIngestionStep(0);
+    setIngestionProgress(0);
+    setIngestionStatusText("Initializing ingestion...");
     setIngestionError(null);
 
-    // Keep the status messages cycling while we wait for the real API
+    // Keep the status messages cycling as a fallback
     ingestionInterval.current = setInterval(() => {
       setIngestionStep((prev) => (prev + 1) % INGESTION_MESSAGES.length);
     }, 3000);
 
     try {
-      const response = await ingestRepo(repoUrl);
-      setIsIngesting(false);
-      setIsIngested(true);
-      setShowIngestionSuccess(true);
-      console.log("Ingestion success:", response.message);
+      await ingestRepo(repoUrl);
+      // Start polling Redis for the actual progress
+      startPolling(repoUrl);
     } catch (err: any) {
-      setIngestionError(err.response?.data?.detail || "Failed to ingest repository. Please check the URL and try again.");
+      setIngestionError(err.response?.data?.detail || "Failed to start ingestion. Is the URL correct?");
       setIsIngesting(false);
-    } finally {
-      clearInterval(ingestionInterval.current);
+      if (ingestionInterval.current) clearInterval(ingestionInterval.current);
     }
   };
 
@@ -116,7 +157,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full font-sans text-foreground">
       {/* Repo input */}
       <div className="border-b border-border px-6 py-4">
         <form onSubmit={handleIngest} className="flex gap-3 items-center">
@@ -150,16 +191,25 @@ const ChatInterface = () => {
         )}
 
         {isIngesting && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-foreground animate-pulse-subtle" />
-            <p className="text-xs text-muted-foreground">
-              {INGESTION_MESSAGES[ingestionStep]}
-            </p>
+          <div className="mt-4 space-y-2 animate-message-in">
+            <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse-subtle" />
+                <span className="font-medium text-foreground">{ingestionStatusText || INGESTION_MESSAGES[ingestionStep]}</span>
+              </div>
+              <span className="font-mono">{ingestionProgress}%</span>
+            </div>
+            <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+                <div 
+                    className="h-full bg-foreground transition-all duration-500 ease-out" 
+                    style={{ width: `${ingestionProgress}%` }}
+                />
+            </div>
           </div>
         )}
 
         {showIngestionSuccess && (
-          <div className="mt-4 bg-primary/5 border border-border rounded-md p-3 flex items-center gap-3 animate-message-in">
+          <div className="mt-4 bg-primary/5 border border-border rounded-md p-3 flex items-center gap-3 animate-message-in font-raleway">
             <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
             <p className="text-sm font-medium text-foreground">
               Repository ingested successfully. You can now ask questions.
@@ -207,7 +257,7 @@ const ChatInterface = () => {
         {isSending && (
           <div className="flex justify-start mb-4">
             <div className="bg-card border border-border rounded-lg px-4 py-3">
-              <span className="text-sm text-muted-foreground animate-pulse-subtle">
+              <span className="text-sm text-muted-foreground animate-pulse-subtle font-mono">
                 Thinking...
               </span>
             </div>
