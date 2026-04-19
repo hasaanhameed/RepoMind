@@ -37,7 +37,7 @@ const AppPage = () => {
               →
             </button>
           )}
-          <span className="text-sm font-semibold text-foreground tracking-tight">
+          <span className="text-xl font-bold font-raleway text-foreground tracking-tighter">
             RepoMind
           </span>
         </div>

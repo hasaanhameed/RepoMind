@@ -2,15 +2,32 @@ import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("mode") !== "signup";
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   
-  const { login, signup, loading, error } = useAuth();
+  const { login, signup, loading, error, setError } = useAuth();
+  
+  const validate = () => {
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return false;
+    }
+    if (!isLogin && !fullName) {
+      setError("Full Name is required for signup.");
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+    
     if (isLogin) {
       await login({ email, password });
     } else {
@@ -86,7 +103,7 @@ const Auth = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-primary-foreground rounded-md py-4 text-base font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 mt-4"
+            className="w-full bg-primary text-primary-foreground border border-primary/20 rounded-md py-4 text-base font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-[0.99] disabled:opacity-50 mt-4"
           >
             {loading ? "Processing..." : (isLogin ? "Sign in" : "Create account")}
           </button>

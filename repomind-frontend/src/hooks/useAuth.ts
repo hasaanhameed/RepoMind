@@ -43,5 +43,5 @@ export const useAuth = () => {
     navigate('/auth');
   };
 
-  return { login, signup, logout, loading, error };
+  return { login, signup, logout, loading, error, setError };
 };

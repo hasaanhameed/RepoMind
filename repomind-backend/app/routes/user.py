@@ -44,6 +44,8 @@ async def signup(user: UserCreateRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login")
 async def login(user: UserLoginRequest, db: AsyncSession = Depends(get_db)):
+    if not user.email or not user.password:
+        raise HTTPException(status_code=400, detail="Email and password are required")
 
     result = await db.execute(
         text("SELECT * FROM users WHERE email = :email"),

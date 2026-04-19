@@ -116,7 +116,7 @@ const ChatInterface = () => {
           <button
             type="submit"
             disabled={isIngesting || isIngested || !repoUrl.trim()}
-            className="shrink-0 bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="shrink-0 bg-primary text-primary-foreground border border-primary/20 rounded-md px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-all shadow-sm active:scale-[0.98] disabled:opacity-40"
           >
             Ingest Repository
           </button>
@@ -138,9 +138,12 @@ const ChatInterface = () => {
         )}
 
         {isIngested && (
-          <p className="mt-2 text-xs text-foreground">
-            Repository ingested successfully. You can now ask questions.
-          </p>
+          <div className="mt-4 bg-success/10 border border-success/20 rounded-md p-3 flex items-center gap-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+            <p className="text-sm font-medium text-success">
+              Repository ingested successfully. You can now ask questions.
+            </p>
+          </div>
         )}
       </div>
 
@@ -185,7 +188,7 @@ const ChatInterface = () => {
           <button
             type="submit"
             disabled={!isIngested || isSending || !input.trim()}
-            className="shrink-0 bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="shrink-0 bg-primary text-primary-foreground border border-primary/20 rounded-md px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-all shadow-sm active:scale-[0.98] disabled:opacity-40"
           >
             Send
           </button>

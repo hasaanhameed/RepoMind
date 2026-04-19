@@ -7,6 +7,8 @@ import Auth from "./pages/Auth.tsx";
 import AppPage from "./pages/AppPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -18,7 +20,14 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/auth" replace />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/app" element={<AppPage />} />
+          <Route 
+            path="/app" 
+            element={
+              <ProtectedRoute>
+                <AppPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
