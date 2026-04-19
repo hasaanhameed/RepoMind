@@ -45,8 +45,9 @@ const AppPage = () => {
               →
             </button>
           )}
-          <span className="text-xl font-bold font-raleway text-foreground tracking-tighter">
-            RepoMind
+          <span className="text-xl font-bold font-raleway tracking-tighter">
+            <span className="text-foreground">Repo</span>
+            <span className="text-muted-foreground/60">Mind</span>
           </span>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Github, Cpu, MessageSquare } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import { ingestRepo } from "@/api/agent";
 import { sendMessage } from "@/api/chat";
@@ -158,9 +159,9 @@ const ChatInterface = () => {
         )}
 
         {showIngestionSuccess && (
-          <div className="mt-4 bg-success/10 border border-success/20 rounded-md p-3 flex items-center gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-            <p className="text-sm font-medium text-success">
+          <div className="mt-4 bg-primary/5 border border-border rounded-md p-3 flex items-center gap-3 animate-message-in">
+            <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
+            <p className="text-sm font-medium text-foreground">
               Repository ingested successfully. You can now ask questions.
             </p>
           </div>
@@ -168,16 +169,37 @@ const ChatInterface = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        {messages.length === 0 && isIngested && (
-          <p className="text-center text-sm text-muted-foreground mt-12">
-            Ask anything about the repository.
-          </p>
-        )}
-        {messages.length === 0 && !isIngested && (
-          <p className="text-center text-sm text-muted-foreground mt-12">
-            Ingest a repository to start reviewing code.
-          </p>
+      <div className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth text-foreground">
+        {messages.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center animate-message-in text-center px-4">
+            {!isIngested ? (
+              <>
+                <div className="relative mb-8">
+                  <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl" />
+                  <Github className="w-20 h-20 text-muted-foreground/30 relative z-10" />
+                </div>
+                <h1 className="font-raleway text-5xl font-bold tracking-tight text-foreground mb-4">
+                  Ingest a repository
+                </h1>
+                <p className="text-muted-foreground text-xl max-w-md leading-relaxed">
+                  Paste a GitHub URL to begin your deep-code analysis and discovery.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="relative mb-8">
+                  <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl" />
+                  <Cpu className="w-20 h-20 text-muted-foreground/30 relative z-10" />
+                </div>
+                <h1 className="font-raleway text-5xl font-bold tracking-tight text-foreground mb-4">
+                  Ready to explore
+                </h1>
+                <p className="text-muted-foreground text-xl max-w-md leading-relaxed">
+                  I've indexed the repository. What would you like to know about the architecture or logic?
+                </p>
+              </>
+            )}
+          </div>
         )}
         {messages.map((msg, i) => (
           <ChatMessage key={i} role={msg.role} content={msg.content} file={msg.file} />
