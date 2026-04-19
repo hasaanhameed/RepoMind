@@ -25,15 +25,45 @@ vector_store = PGVector(
     async_mode=True
 )
 
+# Monkeypatch to bypass "multiple commands" error with asyncpg
+async def _no_op_create_extension():
+    return
+
+vector_store.acreate_vector_extension = _no_op_create_extension
+
+
 # 1. Load, split and store a file
-async def store_file(file_path: str):
+async def store_file(file_path: str, repo_url: str):
     loader = TextLoader(file_path)
     documents = loader.load()
     chunks = text_splitter.split_documents(documents)
+    
+    # Incase a file does not generate any chunks (No content)
+    if not chunks:
+        return
+        
+    # Tag chunks with repository URL
+    for chunk in chunks:
+        chunk.metadata["repo_url"] = repo_url
+
     ids = [str(uuid.uuid4()) for _ in chunks]
     await vector_store.aadd_documents(chunks, ids=ids)
 
-# 2. Search similar chunks
-async def search_similar_chunks(query: str, limit: int = 5) -> list:
-    results = await vector_store.asimilarity_search(query, k=limit)
+
+# 2. Delete existing repository data
+async def delete_repo_data(repo_url: str):
+    """Deletes all chunks associated with a specific repository URL."""
+    try:
+        await vector_store.adelete(filter={"repo_url": repo_url})
+    except Exception as e:
+        print(f"Error deleting old repo data: {e}")
+
+
+# 3. Search similar chunks
+async def search_similar_chunks(query: str, repo_url: str, limit: int = 10) -> list:
+    results = await vector_store.asimilarity_search(
+        query, 
+        k=limit, 
+        filter={"repo_url": repo_url}
+    )
     return [{"file_path": doc.metadata["source"], "content": doc.page_content} for doc in results]

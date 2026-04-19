@@ -1,3 +1,5 @@
+# For testing individual embedding and search functionality
+
 from fastapi import APIRouter
 from app.schemas.embedding import EmbedRequest, EmbedResponse, SearchRequest, SearchResponse
 from app.services.embedding_service import store_file, search_similar_chunks

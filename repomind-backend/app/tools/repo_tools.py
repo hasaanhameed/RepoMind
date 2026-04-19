@@ -9,7 +9,7 @@ from git import Repo
 
 # Library for creating tools in LangChain
 from langchain.tools import tool
-from app.services.embedding_service import store_file
+from app.services.embedding_service import store_file, delete_repo_data
 
 SUPPORTED_EXTENSIONS = {
     # Python
@@ -47,21 +47,32 @@ SUPPORTED_EXTENSIONS = {
 }
 
 @tool
-def clone_and_embed_repo(github_url: str) -> str:
+async def clone_and_embed_repo(github_url: str) -> str:
     """Clones a GitHub repository and embeds all its code files into the vector database."""
     
     temp_dir = tempfile.mkdtemp()
     
     try:
+        print(f"Cleaning up old data for: {github_url} ...")
+        await delete_repo_data(github_url)
+        
+        print(f"Cloning repository: {github_url} ...")
         Repo.clone_from(github_url, temp_dir)
         embedded_count = 0
+        print("Cloning complete. Starting file embedding...")
+        
         for root, dirs, files in os.walk(temp_dir):
             dirs[:] = [d for d in dirs if d not in [".git", "node_modules", "__pycache__"]]
             for file in files:
                 if any(file.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
                     file_path = os.path.join(root, file)
-                    store_file(file_path)
+                    rel_path = os.path.relpath(file_path, temp_dir)
+                    print(f"Embedding file: {rel_path} ...", end="", flush=True)
+                    await store_file(file_path, github_url)
+                    print(" [Done]")
                     embedded_count += 1
+                    
+        print(f"Ingestion finished. Total files embedded: {embedded_count}")
         return f"Successfully embedded {embedded_count} files from {github_url}"
     finally:
         def handle_remove_readonly(func, path, exc):

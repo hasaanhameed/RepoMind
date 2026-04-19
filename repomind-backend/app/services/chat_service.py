@@ -8,8 +8,8 @@ llm = ChatGroq(api_key=settings.GROQ_API_KEY, model="llama-3.3-70b-versatile")
 
 conversation_history = []
 
-async def chat(message: str) -> str:
-    relevant_chunks = search_similar_chunks(message)
+async def chat(message: str, repo_url: str) -> str:
+    relevant_chunks = await search_similar_chunks(message, repo_url)
 
     context = "\n\n".join([
         f"File: {chunk['file_path']}\n{chunk['content']}"

@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
+import { ingestRepo } from "@/api/agent";
+import { sendMessage } from "@/api/chat";
 
 interface Message {
   role: "user" | "ai";
   content: string;
   file?: string;
 }
-
-const BASE_URL = "http://127.0.0.1:8000";
 
 const INGESTION_MESSAGES = [
   "Cloning repository...",
@@ -22,10 +22,12 @@ const ChatInterface = () => {
   const [repoUrl, setRepoUrl] = useState("");
   const [isIngesting, setIsIngesting] = useState(false);
   const [isIngested, setIsIngested] = useState(false);
+  const [showIngestionSuccess, setShowIngestionSuccess] = useState(false);
   const [ingestionStep, setIngestionStep] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [ingestionError, setIngestionError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const ingestionInterval = useRef<ReturnType<typeof setInterval>>();
 
@@ -39,65 +41,57 @@ const ChatInterface = () => {
 
     setIsIngesting(true);
     setIngestionStep(0);
+    setIngestionError(null);
 
+    // Keep the status messages cycling while we wait for the real API
     ingestionInterval.current = setInterval(() => {
-      setIngestionStep((prev) => {
-        if (prev < INGESTION_MESSAGES.length - 1) return prev + 1;
-        return prev;
-      });
-    }, 2500);
+      setIngestionStep((prev) => (prev + 1) % INGESTION_MESSAGES.length);
+    }, 3000);
 
     try {
-      await fetch(`${BASE_URL}/agent/ingest`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ github_url: repoUrl }),
-      });
-    } catch {
-      // silently handle — frontend-only demo
+      const response = await ingestRepo(repoUrl);
+      setIsIngesting(false);
+      setIsIngested(true);
+      setShowIngestionSuccess(true);
+      console.log("Ingestion success:", response.message);
+    } catch (err: any) {
+      setIngestionError(err.response?.data?.detail || "Failed to ingest repository. Please check the URL and try again.");
+      setIsIngesting(false);
+    } finally {
+      clearInterval(ingestionInterval.current);
     }
-
-    clearInterval(ingestionInterval.current);
-    setIsIngesting(false);
-    setIsIngested(true);
   };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !isIngested) return;
 
+    setShowIngestionSuccess(false);
     const userMessage = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsSending(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/chat/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
-      });
-      const data = await res.json();
+      const data = await sendMessage(userMessage, repoUrl);
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          content: data.response || data.message || "No response received.",
-          file: data.file || undefined,
+          content: data.reply || "No response received.",
         },
       ]);
-    } catch {
+    } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          content:
-            "**Error:** Could not reach the server. Make sure the backend is running at `http://127.0.0.1:8000`.",
+          content: `**Error:** ${err.response?.data?.detail || "Could not reach the server."}`,
         },
       ]);
+    } finally {
+      setIsSending(false);
     }
-
-    setIsSending(false);
   };
 
   return (
@@ -122,10 +116,16 @@ const ChatInterface = () => {
           </button>
         </form>
 
-        {!isIngesting && !isIngested && (
+        {!isIngesting && !isIngested && !ingestionError && (
           <p className="mt-2 text-xs text-muted-foreground">
             Ingestion typically takes 2–10 minutes depending on repository size.
           </p>
+        )}
+
+        {ingestionError && (
+          <div className="mt-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-md p-3">
+            {ingestionError}
+          </div>
         )}
 
         {isIngesting && (
@@ -137,7 +137,7 @@ const ChatInterface = () => {
           </div>
         )}
 
-        {isIngested && (
+        {showIngestionSuccess && (
           <div className="mt-4 bg-success/10 border border-success/20 rounded-md p-3 flex items-center gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             <p className="text-sm font-medium text-success">

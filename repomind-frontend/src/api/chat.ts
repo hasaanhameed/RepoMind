@@ -1,8 +1,7 @@
-// Placeholder for chat API functions
-// import api from '../lib/axios';
+import api from '../lib/axios';
+import { ChatRequest, ChatResponse } from './types/chat_type';
 
-export const sendMessage = async (message: string) => {
-  // const response = await api.post('/chat', { message });
-  // return response.data;
-  console.log('Sending message:', message);
+export const sendMessage = async (message: string, repo_url: string) => {
+  const response = await api.post<ChatResponse>('/chat/', { message, repo_url });
+  return response.data;
 };
