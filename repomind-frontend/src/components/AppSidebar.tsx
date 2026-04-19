@@ -7,6 +7,7 @@ interface AppSidebarProps {
   activeChatIndex: number;
   onSelectChat: (index: number) => void;
   onNewChat: () => void;
+  userName: string;
 }
 
 const AppSidebar = ({
@@ -16,6 +17,7 @@ const AppSidebar = ({
   activeChatIndex,
   onSelectChat,
   onNewChat,
+  userName,
 }: AppSidebarProps) => {
   const [historyOpen, setHistoryOpen] = useState(true);
 
@@ -27,16 +29,16 @@ const AppSidebar = ({
   return (
     <aside
       className={`shrink-0 border-r border-border bg-sidebar flex flex-col h-screen transition-all duration-300 ${
-        isOpen ? "w-64" : "w-0 overflow-hidden border-r-0"
+        isOpen ? "w-auto min-w-[256px] max-w-[320px]" : "w-0 overflow-hidden border-r-0"
       }`}
     >
-      <div className="px-5 py-5 flex items-center justify-between">
-        <span className="text-sm text-sidebar-foreground whitespace-nowrap">
-          Welcome, User
+      <div className="px-5 py-5 flex items-center justify-between gap-4">
+        <span className="text-sm font-medium text-sidebar-foreground truncate whitespace-nowrap">
+          Welcome, {userName}
         </span>
         <button
           onClick={onToggle}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           ←
         </button>

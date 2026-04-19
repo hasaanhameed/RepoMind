@@ -9,6 +9,7 @@ from app.schemas.user import UserCreateRequest, UserLoginRequest
 from app.services.hashing_service import hash_password
 from app.services.hashing_service import verify_password
 from app.services.token_service import create_access_token
+from app.services.get_current_user_service import get_current_user
 
 router = APIRouter(prefix="/user", tags=["User"])
 
@@ -64,3 +65,8 @@ async def login(user: UserLoginRequest, db: AsyncSession = Depends(get_db)):
         "access_token": token,
         "token_type": "bearer"
     }
+
+
+@router.get("/me")
+async def get_me(user = Depends(get_current_user)):
+    return {"name": user.name}

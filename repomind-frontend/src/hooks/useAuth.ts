@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login as loginApi, signup as signupApi } from '../api/auth';
+import { login as loginApi, signup as signupApi, getMe as getMeApi } from '../api/auth';
 import { LoginRequest, SignupRequest } from '../api/types/auth_type';
 
 export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ name: string } | null>(null);
   const navigate = useNavigate();
+
+  const fetchMe = async () => {
+    try {
+      const userData = await getMeApi();
+      setUser(userData);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        logout();
+      }
+    }
+  };
 
   const login = async (data: LoginRequest) => {
     setLoading(true);
@@ -14,6 +26,7 @@ export const useAuth = () => {
     try {
       const response = await loginApi(data);
       localStorage.setItem('token', response.access_token);
+      await fetchMe();
       navigate('/app');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed');
@@ -40,8 +53,9 @@ export const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    setUser(null);
     navigate('/auth');
   };
 
-  return { login, signup, logout, loading, error, setError };
+  return { login, signup, logout, fetchMe, user, loading, error, setError };
 };

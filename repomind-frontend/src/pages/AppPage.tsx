@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import ChatInterface from "@/components/ChatInterface";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
 
 const INITIAL_CHATS = ["Chat 1", "Chat 2", "Chat 3"];
 
@@ -9,6 +10,11 @@ const AppPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chats, setChats] = useState(INITIAL_CHATS);
   const [activeChatIndex, setActiveChatIndex] = useState(0);
+  const { user, fetchMe } = useAuth();
+
+  useEffect(() => {
+    fetchMe();
+  }, []);
 
   const handleNewChat = () => {
     const newName = `Chat ${chats.length + 1}`;
@@ -25,6 +31,7 @@ const AppPage = () => {
         activeChatIndex={activeChatIndex}
         onSelectChat={setActiveChatIndex}
         onNewChat={handleNewChat}
+        userName={user?.name || "User"}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
