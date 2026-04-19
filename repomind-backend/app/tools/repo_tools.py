@@ -9,48 +9,13 @@ from git import Repo
 
 # Library for creating tools in LangChain
 from langchain.tools import tool
-from app.services.embedding_service import store_file
-
-SUPPORTED_EXTENSIONS = {
-    # Python
-    ".py",
-    # JavaScript / TypeScript
-    ".js", ".ts", ".jsx", ".tsx",
-    # Java
-    ".java",
-    # C / C++
-    ".c", ".cpp", ".h", ".hpp",
-    # C#
-    ".cs",
-    # Go
-    ".go",
-    # Rust
-    ".rs",
-    # Ruby
-    ".rb",
-    # PHP
-    ".php",
-    # Swift
-    ".swift",
-    # Kotlin
-    ".kt",
-    # Dart
-    ".dart",
-    # Shell
-    ".sh", ".bash",
-    # Docs
-    ".md", ".txt",
-    # Config
-    ".json", ".yaml", ".yml", ".toml",
-    # SQL
-    ".sql",
-}
+from app.services.embedding_service import store_file, delete_repo_data
+from app.services.ingestion_status_service import ingestion_status_service
+from app.utils.repo_utils import generate_file_tree, SUPPORTED_EXTENSIONS
 
 @tool
 async def clone_and_embed_repo(github_url: str) -> str:
     """Clones a GitHub repository and embeds all its code files into the vector database."""
-    from app.services.ingestion_status_service import ingestion_status_service
-    from app.services.embedding_service import delete_repo_data
     
     temp_dir = tempfile.mkdtemp()
     
@@ -88,7 +53,12 @@ async def clone_and_embed_repo(github_url: str) -> str:
             embedded_count += 1
                     
         await ingestion_status_service.update_status(github_url, "completed", current=total_files, total=total_files, message="Ingestion finished successfully.")
-        return f"Successfully embedded {embedded_count} files from {github_url}"
+        
+        # Finally, generate a complete file tree for AI "Global Awareness"
+        repo_tree = generate_file_tree(temp_dir)
+        await ingestion_status_service.save_repo_tree(github_url, repo_tree)
+        
+        return f"Successfully embedded {embedded_count} files and generated project map for {github_url}"
     except Exception as e:
         await ingestion_status_service.update_status(github_url, "error", message=f"Error: {str(e)}")
         raise e

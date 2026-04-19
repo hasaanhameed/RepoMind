@@ -31,12 +31,20 @@ const ChatInterface = () => {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [ingestionError, setIngestionError] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const ingestionInterval = useRef<ReturnType<typeof setInterval>>();
   const pollingInterval = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = scrollContainerRef.current;
+    if (container) {
+      // Check if user is near the bottom (within 100px)
+      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isAtBottom) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   }, [messages]);
 
   // Clean up intervals on unmount
@@ -219,7 +227,10 @@ const ChatInterface = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth text-foreground">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto px-6 py-6 scroll-smooth text-foreground"
+      >
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center animate-message-in text-center px-4">
             {!isIngested ? (

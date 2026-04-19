@@ -62,4 +62,31 @@ class IngestionStatusService:
             "message": "No ingestion active for this repository."
         }
 
+    async def save_repo_tree(self, repo_url: str, tree: str):
+        """
+        Saves the file tree for a repository to Redis/fallback.
+        """
+        key = f"repo_tree:{repo_url}"
+        try:
+            await self.redis.set(key, tree, ex=self.expire_time)
+            self._redis_available = True
+        except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
+            self._redis_available = False
+            self._fallback_storage[key] = tree
+
+    async def get_repo_tree(self, repo_url: str):
+        """
+        Retrieves the file tree for a repository.
+        """
+        key = f"repo_tree:{repo_url}"
+        try:
+            data = await self.redis.get(key)
+            self._redis_available = True
+            if data:
+                return data
+        except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
+            self._redis_available = False
+            return self._fallback_storage.get(key)
+        return None
+
 ingestion_status_service = IngestionStatusService()
