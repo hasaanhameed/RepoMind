@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from typing import List, Optional
-from uuid import UUID
 from app.schemas.chat import MessageSchema, ChatHistorySchema
 
 class ChatHistoryService:
@@ -81,5 +80,19 @@ class ChatHistoryService:
             )
             for row in rows
         ]
+
+    async def update_chat_title(self, db: AsyncSession, chat_id: str, title: str):
+        await db.execute(
+            text("UPDATE chats SET title = :title, updated_at = NOW() WHERE id = :chat_id"),
+            {"title": title, "chat_id": chat_id}
+        )
+        await db.commit()
+
+    async def get_message_count(self, db: AsyncSession, chat_id: str) -> int:
+        result = await db.execute(
+            text("SELECT COUNT(*) FROM messages WHERE chat_id = :chat_id"),
+            {"chat_id": chat_id}
+        )
+        return result.scalar() or 0
 
 chat_history_service = ChatHistoryService()

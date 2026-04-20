@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.services.embedding_service import search_similar_chunks
 from app.services.ingestion_status_service import ingestion_status_service
 from app.services.chat_history_service import chat_history_service
+from app.services.llm_naming_service import generate_chat_title
 
 # Initialize LLM
 llm = ChatGroq(api_key=settings.GROQ_API_KEY, model="llama-3.3-70b-versatile")
@@ -70,5 +71,14 @@ async def chat(db: AsyncSession, message: str, repo_url: str, chat_id: str) -> s
 
     # 7. Save Assistant Reply to DB
     await chat_history_service.save_message(db, chat_id, "assistant", reply)
+
+    # 8. Automatic Chat Naming (Trigger only on first exchange)
+    msg_count = await chat_history_service.get_message_count(db, chat_id)
+    if msg_count == 2:
+        try:
+            new_title = await generate_chat_title(message, reply)
+            await chat_history_service.update_chat_title(db, chat_id, new_title)
+        except Exception as e:
+            print(f"Failed to generate chat title: {e}")
 
     return reply

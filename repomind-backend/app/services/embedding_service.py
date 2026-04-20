@@ -1,5 +1,5 @@
 import uuid
-from langchain_community.document_loaders import TextLoader
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
@@ -31,12 +31,20 @@ async def _no_op_create_extension():
 
 vector_store.acreate_vector_extension = _no_op_create_extension
 
-
 # 1. Load, split and store a file
 async def store_file(file_path: str, repo_url: str):
-    loader = TextLoader(file_path)
-    documents = loader.load()
-    chunks = text_splitter.split_documents(documents)
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read().replace("\x00", "")
+        
+        if not content.strip():
+            return
+
+        documents = [Document(page_content=content, metadata={"source": file_path})]
+        chunks = text_splitter.split_documents(documents)
+    except Exception as e:
+        print(f"Error reading file {file_path}: {e}")
+        return
     
     # Incase a file does not generate any chunks (No content)
     if not chunks:

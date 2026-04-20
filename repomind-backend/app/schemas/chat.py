@@ -5,7 +5,7 @@ from datetime import datetime
 class ChatRequest(BaseModel):
     message: str
     repo_url: str
-    chat_id: Optional[str] = None # Optional for new chats
+    chat_id: Optional[str] = None 
 
 class ChatResponse(BaseModel):
     reply: str

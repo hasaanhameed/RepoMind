@@ -3,24 +3,26 @@ import AppSidebar from "@/components/AppSidebar";
 import ChatInterface from "@/components/ChatInterface";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-
-const INITIAL_CHATS = ["Chat 1", "Chat 2", "Chat 3"];
+import { useChat } from "@/hooks/useChat";
 
 const AppPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [chats, setChats] = useState(INITIAL_CHATS);
-  const [activeChatIndex, setActiveChatIndex] = useState(0);
   const { user, fetchMe } = useAuth();
+  const {
+    chats,
+    activeChatId,
+    messages,
+    repoUrl,
+    loadHistory,
+    handleSelectChat,
+    handleNewChat,
+    handleChatCreated,
+  } = useChat();
 
   useEffect(() => {
     fetchMe();
+    loadHistory();
   }, []);
-
-  const handleNewChat = () => {
-    const newName = `Chat ${chats.length + 1}`;
-    setChats((prev) => [...prev, newName]);
-    setActiveChatIndex(chats.length);
-  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -28,8 +30,8 @@ const AppPage = () => {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         chats={chats}
-        activeChatIndex={activeChatIndex}
-        onSelectChat={setActiveChatIndex}
+        activeChatId={activeChatId}
+        onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
         userName={user?.name || "User"}
       />
@@ -55,7 +57,12 @@ const AppPage = () => {
         </div>
 
         <div className="flex-1 min-h-0">
-          <ChatInterface />
+          <ChatInterface 
+            activeChatId={activeChatId}
+            initialMessages={messages}
+            initialRepoUrl={repoUrl}
+            onChatCreated={handleChatCreated}
+          />
         </div>
       </div>
     </div>
@@ -63,3 +70,5 @@ const AppPage = () => {
 };
 
 export default AppPage;
+
+

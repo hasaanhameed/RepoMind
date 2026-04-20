@@ -46,7 +46,7 @@ const ChatMessage = ({ role, content, file }: ChatMessageProps) => {
                           padding: "1rem",
                           fontSize: "0.8rem",
                           lineHeight: "1.5",
-                          backgroundColor: "transparent",
+                          backgroundColor: "#282c34",
                           fontFamily: "'IBM Plex Mono', 'Courier New', monospace"
                         } as React.CSSProperties}
                       >

@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { ChatHistorySchema } from "@/api/types/chat_type";
 
 interface AppSidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  chats: string[];
-  activeChatIndex: number;
-  onSelectChat: (index: number) => void;
+  chats: ChatHistorySchema[];
+  activeChatId: string | null;
+  onSelectChat: (id: string) => void;
   onNewChat: () => void;
   userName: string;
 }
@@ -14,7 +15,7 @@ const AppSidebar = ({
   isOpen,
   onToggle,
   chats,
-  activeChatIndex,
+  activeChatId,
   onSelectChat,
   onNewChat,
   userName,
@@ -54,19 +55,22 @@ const AppSidebar = ({
         </button>
         {historyOpen && (
           <div className="space-y-0.5">
-            {chats.map((chat, i) => (
+            {chats.map((chat) => (
               <button
-                key={i}
-                onClick={() => onSelectChat(i)}
+                key={chat.id}
+                onClick={() => onSelectChat(chat.id)}
                 className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                  i === activeChatIndex
+                  chat.id === activeChatId
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                 }`}
               >
-                {chat}
+                <span className="truncate block">{chat.title}</span>
               </button>
             ))}
+            {chats.length === 0 && (
+                <p className="px-3 py-2 text-xs text-muted-foreground italic">No history yet</p>
+            )}
           </div>
         )}
       </div>
@@ -105,3 +109,4 @@ const AppSidebar = ({
 };
 
 export default AppSidebar;
+

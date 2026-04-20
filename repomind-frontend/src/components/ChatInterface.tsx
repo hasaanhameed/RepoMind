@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Github, Cpu, MessageSquare } from "lucide-react";
+import { Github, Cpu } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import { ingestRepo, getIngestionStatus } from "@/api/agent";
 import { sendMessage } from "@/api/chat";
+import { MessageSchema } from "@/api/types/chat_type";
 
-interface Message {
-  role: "user" | "ai";
-  content: string;
-  file?: string;
+interface ChatInterfaceProps {
+  activeChatId: string | null;
+  initialMessages: MessageSchema[];
+  initialRepoUrl: string;
+  onChatCreated: (chatId: string, repoUrl: string) => void;
 }
 
 const INGESTION_MESSAGES = [
@@ -19,15 +21,20 @@ const INGESTION_MESSAGES = [
   "Finalizing ingestion...",
 ];
 
-const ChatInterface = () => {
-  const [repoUrl, setRepoUrl] = useState("");
+const ChatInterface = ({
+  activeChatId,
+  initialMessages,
+  initialRepoUrl,
+  onChatCreated,
+}: ChatInterfaceProps) => {
+  const [repoUrl, setRepoUrl] = useState(initialRepoUrl);
   const [isIngesting, setIsIngesting] = useState(false);
-  const [isIngested, setIsIngested] = useState(false);
+  const [isIngested, setIsIngested] = useState(!!initialRepoUrl);
   const [showIngestionSuccess, setShowIngestionSuccess] = useState(false);
   const [ingestionStep, setIngestionStep] = useState(0);
   const [ingestionProgress, setIngestionProgress] = useState(0);
   const [ingestionStatusText, setIngestionStatusText] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<{ role: "user" | "ai"; content: string; file?: string }[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [ingestionError, setIngestionError] = useState<string | null>(null);
@@ -36,10 +43,23 @@ const ChatInterface = () => {
   const ingestionInterval = useRef<ReturnType<typeof setInterval>>();
   const pollingInterval = useRef<ReturnType<typeof setInterval>>();
 
+  // Sync messages when activeChatId or initialMessages change
+  useEffect(() => {
+    setMessages(initialMessages.map(m => ({
+        role: m.role === "assistant" ? "ai" : "user",
+        content: m.content
+    })));
+  }, [initialMessages]);
+
+  // Sync repoUrl when initialRepoUrl changes (switching chats)
+  useEffect(() => {
+    setRepoUrl(initialRepoUrl);
+    setIsIngested(!!initialRepoUrl);
+  }, [initialRepoUrl]);
+
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
-      // Check if user is near the bottom (within 100px)
       const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
       if (isAtBottom) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,7 +67,6 @@ const ChatInterface = () => {
     }
   }, [messages]);
 
-  // Clean up intervals on unmount
   useEffect(() => {
     return () => {
       if (ingestionInterval.current) clearInterval(ingestionInterval.current);
@@ -65,7 +84,7 @@ const ChatInterface = () => {
         
         if (status.status === "embedding") {
           const percent = Math.round((status.current / status.total) * 100);
-          setIngestionProgress(10 + Math.floor(percent * 0.9)); // Cloning is ~10%, embedding is 90%
+          setIngestionProgress(10 + Math.floor(percent * 0.9));
         } else if (status.status === "cloning") {
           setIngestionProgress(5);
         } else if (status.status === "completed") {
@@ -96,14 +115,12 @@ const ChatInterface = () => {
     setIngestionStatusText("Initializing ingestion...");
     setIngestionError(null);
 
-    // Keep the status messages cycling as a fallback
     ingestionInterval.current = setInterval(() => {
       setIngestionStep((prev) => (prev + 1) % INGESTION_MESSAGES.length);
     }, 3000);
 
     try {
       await ingestRepo(repoUrl);
-      // Start polling Redis for the actual progress
       startPolling(repoUrl);
     } catch (err: any) {
       setIngestionError(err.response?.data?.detail || "Failed to start ingestion. Is the URL correct?");
@@ -123,15 +140,19 @@ const ChatInterface = () => {
     setIsSending(true);
 
     try {
-      const data = await sendMessage(userMessage, repoUrl);
+      const data = await sendMessage(userMessage, repoUrl, activeChatId || undefined);
       const fullReply = data.reply || "No response received.";
       
-      // Add an empty AI message to begin the typing effect
+      // If this was a new chat, notify the parent
+      if (!activeChatId && data.chat_id) {
+        onChatCreated(data.chat_id, repoUrl);
+      }
+
       setMessages((prev) => [...prev, { role: "ai", content: "" }]);
       
       let currentLength = 0;
-      const typeSpeed = 10; // ms per chunk
-      const charsPerTick = 3; // number of characters to add per tick for a smooth but fast feel
+      const typeSpeed = 10;
+      const charsPerTick = 3;
 
       const typeInterval = setInterval(() => {
         currentLength += charsPerTick;
@@ -302,3 +323,4 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
+
