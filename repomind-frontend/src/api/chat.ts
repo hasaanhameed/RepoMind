@@ -11,7 +11,11 @@ export const getHistory = async () => {
     return response.data;
 };
 
-export const getMessages = async (chatId: string) => {
-    const response = await api.get<MessageSchema[]>(`/chat/${chatId}/messages`);
-    return response.data;
+export const getMessages = async (chatId: string): Promise<MessageSchema[]> => {
+  const response = await api.get(`/chat/${chatId}/messages`);
+  return response.data;
+};
+
+export const updateChatTitle = async (chatId: string, title: string): Promise<void> => {
+  await api.patch(`/chat/${chatId}`, { title });
 };

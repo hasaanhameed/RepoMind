@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getHistory, getMessages } from "@/api/chat";
+import { getHistory, getMessages, updateChatTitle } from "@/api/chat";
 import { ChatHistorySchema, MessageSchema } from "@/api/types/chat_type";
 
 export const useChat = () => {
@@ -35,6 +35,20 @@ export const useChat = () => {
     }
   };
 
+  const handleUpdateChatTitle = async (chatId: string, newTitle: string) => {
+    try {
+      await updateChatTitle(chatId, newTitle);
+      // Optimistic update
+      setChats((prev) =>
+        prev.map((c) => (c.id === chatId ? { ...c, title: newTitle } : c))
+      );
+    } catch (err) {
+      console.error("Failed to update chat title", err);
+      // Refresh history to sync in case of error
+      loadHistory();
+    }
+  };
+
   const handleNewChat = () => {
     setActiveChatId(null);
     setMessages([]);
@@ -55,6 +69,7 @@ export const useChat = () => {
     isLoading,
     loadHistory,
     handleSelectChat,
+    handleUpdateChatTitle,
     handleNewChat,
     handleChatCreated,
   };

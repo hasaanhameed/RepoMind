@@ -3,7 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from app.database.connection import get_db
-from app.schemas.chat import ChatRequest, ChatResponse, MessageSchema, ChatHistorySchema
+from app.schemas.chat import (
+    ChatRequest, 
+    ChatResponse, 
+    MessageSchema, 
+    ChatHistorySchema,
+    UpdateChatTitleSchema
+)
 from app.services.chat_service import chat
 from app.services.chat_history_service import chat_history_service
 from app.services.get_current_user_service import get_current_user
@@ -33,15 +39,28 @@ async def get_history(
 ):
     return await chat_history_service.get_user_chat_history(db, user.id)
 
+@router.patch("/{chat_id}")
+async def rename_chat(
+    chat_id: str,
+    request: UpdateChatTitleSchema,
+    db: AsyncSession = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    # Verify ownership
+    history = await chat_history_service.get_user_chat_history(db, user.id)
+    if not any(str(c.id) == chat_id for c in history):
+        raise HTTPException(status_code=403, detail="Not authorized to edit this chat")
+        
+    await chat_history_service.update_chat_title(db, chat_id, request.title)
+    return {"message": "Title updated successfully"}
+
 @router.get("/{chat_id}/messages", response_model=List[MessageSchema])
 async def get_messages(
     chat_id: str,
     db: AsyncSession = Depends(get_db),
     user = Depends(get_current_user)
 ):
-    # Verify chat ownership (implicitly handled in service or explicitly here)
-    # For now, we trust the service to return messages for valid IDs
-    # But a proper ownership check is better:
+    # Verify ownership
     history = await chat_history_service.get_user_chat_history(db, user.id)
     if not any(str(c.id) == chat_id for c in history):
         raise HTTPException(status_code=403, detail="Not authorized to access this chat")

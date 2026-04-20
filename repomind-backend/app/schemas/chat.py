@@ -21,3 +21,6 @@ class ChatHistorySchema(BaseModel):
     title: str
     repo_url: Optional[str]
     created_at: datetime
+
+class UpdateChatTitleSchema(BaseModel):
+    title: str

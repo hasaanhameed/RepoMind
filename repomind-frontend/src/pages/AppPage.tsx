@@ -15,6 +15,7 @@ const AppPage = () => {
     repoUrl,
     loadHistory,
     handleSelectChat,
+    handleUpdateChatTitle,
     handleNewChat,
     handleChatCreated,
   } = useChat();
@@ -32,6 +33,7 @@ const AppPage = () => {
         chats={chats}
         activeChatId={activeChatId}
         onSelectChat={handleSelectChat}
+        onUpdateChatTitle={handleUpdateChatTitle}
         onNewChat={handleNewChat}
         userName={user?.name || "User"}
       />
