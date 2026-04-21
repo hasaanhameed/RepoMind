@@ -95,4 +95,17 @@ class ChatHistoryService:
         )
         return result.scalar() or 0
 
+    async def delete_chat(self, db: AsyncSession, chat_id: str):
+        # 1. Delete associated messages first (Manual Cascade)
+        await db.execute(
+            text("DELETE FROM messages WHERE chat_id = :chat_id"),
+            {"chat_id": chat_id}
+        )
+        # 2. Delete the chat session
+        await db.execute(
+            text("DELETE FROM chats WHERE id = :chat_id"),
+            {"chat_id": chat_id}
+        )
+        await db.commit()
+
 chat_history_service = ChatHistoryService()

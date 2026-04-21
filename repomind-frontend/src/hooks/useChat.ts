@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getHistory, getMessages, updateChatTitle } from "@/api/chat";
+import { getHistory, getMessages, updateChatTitle, deleteChat } from "@/api/chat";
 import { ChatHistorySchema, MessageSchema } from "@/api/types/chat_type";
 
 export const useChat = () => {
@@ -44,7 +44,21 @@ export const useChat = () => {
       );
     } catch (err) {
       console.error("Failed to update chat title", err);
-      // Refresh history to sync in case of error
+      loadHistory();
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await deleteChat(chatId);
+      // Optimistic update
+      setChats((prev) => prev.filter((c) => c.id !== chatId));
+      // If we are deleting the active chat, reset to "New Chat" state
+      if (chatId === activeChatId) {
+        handleNewChat();
+      }
+    } catch (err) {
+      console.error("Failed to delete chat", err);
       loadHistory();
     }
   };
@@ -70,6 +84,7 @@ export const useChat = () => {
     loadHistory,
     handleSelectChat,
     handleUpdateChatTitle,
+    handleDeleteChat,
     handleNewChat,
     handleChatCreated,
   };

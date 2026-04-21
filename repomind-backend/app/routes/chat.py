@@ -54,6 +54,20 @@ async def rename_chat(
     await chat_history_service.update_chat_title(db, chat_id, request.title)
     return {"message": "Title updated successfully"}
 
+@router.delete("/{chat_id}")
+async def delete_chat(
+    chat_id: str,
+    db: AsyncSession = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    # Verify ownership
+    history = await chat_history_service.get_user_chat_history(db, user.id)
+    if not any(str(c.id) == chat_id for c in history):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this chat")
+        
+    await chat_history_service.delete_chat(db, chat_id)
+    return {"message": "Chat deleted successfully"}
+
 @router.get("/{chat_id}/messages", response_model=List[MessageSchema])
 async def get_messages(
     chat_id: str,

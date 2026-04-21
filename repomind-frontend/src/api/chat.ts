@@ -19,3 +19,7 @@ export const getMessages = async (chatId: string): Promise<MessageSchema[]> => {
 export const updateChatTitle = async (chatId: string, title: string): Promise<void> => {
   await api.patch(`/chat/${chatId}`, { title });
 };
+
+export const deleteChat = async (chatId: string): Promise<void> => {
+  await api.delete(`/chat/${chatId}`);
+};

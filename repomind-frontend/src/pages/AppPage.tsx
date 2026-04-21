@@ -16,6 +16,7 @@ const AppPage = () => {
     loadHistory,
     handleSelectChat,
     handleUpdateChatTitle,
+    handleDeleteChat,
     handleNewChat,
     handleChatCreated,
   } = useChat();
@@ -34,6 +35,7 @@ const AppPage = () => {
         activeChatId={activeChatId}
         onSelectChat={handleSelectChat}
         onUpdateChatTitle={handleUpdateChatTitle}
+        onDeleteChat={handleDeleteChat}
         onNewChat={handleNewChat}
         userName={user?.name || "User"}
       />

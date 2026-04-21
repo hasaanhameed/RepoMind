@@ -8,6 +8,7 @@ interface AppSidebarProps {
   activeChatId: string | null;
   onSelectChat: (id: string) => void;
   onUpdateChatTitle: (id: string, title: string) => void;
+  onDeleteChat: (id: string) => void;
   onNewChat: () => void;
   userName: string;
 }
@@ -19,6 +20,7 @@ const AppSidebar = ({
   activeChatId,
   onSelectChat,
   onUpdateChatTitle,
+  onDeleteChat,
   onNewChat,
   userName,
 }: AppSidebarProps) => {
@@ -48,6 +50,13 @@ const AppSidebar = ({
       onUpdateChatTitle(id, editValue.trim());
     }
     setEditingId(null);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this chat?")) {
+      onDeleteChat(id);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
@@ -108,26 +117,49 @@ const AppSidebar = ({
                     }`}
                   >
                     <span className="truncate flex-1">{chat.title}</span>
-                    <button
-                      onClick={(e) => startEditing(e, chat)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-sidebar-accent-foreground/10 rounded transition-all"
-                      title="Rename"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={(e) => startEditing(e, chat)}
+                        className="p-1 hover:bg-sidebar-accent-foreground/10 rounded transition-all"
+                        title="Rename"
                       >
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
-                      </svg>
-                    </button>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          <path d="m15 5 4 4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(e, chat.id)}
+                        className="p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-all"
+                        title="Delete"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
                   </button>
                 )}
               </div>
