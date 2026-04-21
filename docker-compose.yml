@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  repomind-redis:
+    image: redis:alpine
+    container_name: repomind-redis
+    ports:
+      - "6379:6379"
+
+  repomind-backend:
+    build:
+      context: ./repomind-backend
+      dockerfile: Dockerfile
+    container_name: repomind-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./repomind-backend/.env
+    environment:
+      - REDIS_URL=redis://repomind-redis:6379
+    depends_on:
+      - repomind-redis
+
+  repomind-frontend:
+    build:
+      context: ./repomind-frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8000
+    container_name: repomind-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - repomind-backend
+
+volumes:
+  redis_data:
