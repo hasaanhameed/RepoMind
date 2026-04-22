@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   repomind-redis:
     image: redis:alpine
@@ -8,6 +6,7 @@ services:
       - "6379:6379"
 
   repomind-backend:
+    # image: ghcr.io/hasaanhameed/repomind-backend:latest
     build:
       context: ./repomind-backend
       dockerfile: Dockerfile
@@ -22,6 +21,7 @@ services:
       - repomind-redis
 
   repomind-frontend:
+    # image: ghcr.io/hasaanhameed/repomind-frontend:latest
     build:
       context: ./repomind-frontend
       dockerfile: Dockerfile
