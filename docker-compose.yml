@@ -11,8 +11,8 @@ services:
       context: ./repomind-backend
       dockerfile: Dockerfile
     container_name: repomind-backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     env_file:
       - ./repomind-backend/.env
     environment:
@@ -26,7 +26,7 @@ services:
       context: ./repomind-frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:8000
+        - VITE_API_URL=/api
     container_name: repomind-frontend
     ports:
       - "80:80"
