@@ -9,7 +9,7 @@ from git import Repo
 
 # Library for creating tools in LangChain
 from langchain.tools import tool
-from app.services.embedding_service import store_file, store_files_batch, delete_repo_data
+from app.services.embedding_service import store_file, store_files_batch, delete_repo_data, initialize_vector_store
 from app.services.ingestion_status_service import ingestion_status_service
 from app.utils.repo_utils import generate_file_tree, SUPPORTED_EXTENSIONS, IGNORE_DIRS, IGNORE_FILES
 
@@ -20,6 +20,7 @@ async def clone_and_embed_repo(github_url: str) -> str:
     temp_dir = tempfile.mkdtemp()
     try:
         await ingestion_status_service.update_status(github_url, "cloning", message="Cleaning up old data...")
+        await initialize_vector_store()
         await delete_repo_data(github_url)
         
         await ingestion_status_service.update_status(github_url, "cloning", message="Cloning repository from GitHub...")

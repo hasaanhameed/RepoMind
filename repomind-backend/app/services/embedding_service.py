@@ -101,6 +101,10 @@ async def store_files_batch(file_paths: list[str], repo_url: str):
 
 
 # 2. Delete existing repository data
+async def initialize_vector_store():
+    """Ensures the vector store collection exists before any operations are performed."""
+    await vector_store.acreate_collection()
+
 async def delete_repo_data(repo_url: str):
     """Deletes all chunks associated with a specific repository URL."""
     try:
