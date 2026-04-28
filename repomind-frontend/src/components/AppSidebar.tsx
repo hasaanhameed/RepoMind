@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatHistorySchema } from "@/api/types/chat_type";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 interface AppSidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -26,6 +35,7 @@ const AppSidebar = ({
 }: AppSidebarProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,8 +64,13 @@ const AppSidebar = ({
 
   const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this chat?")) {
-      onDeleteChat(id);
+    setChatToDelete(id);
+  };
+
+  const confirmDelete = () => {
+    if (chatToDelete) {
+      onDeleteChat(chatToDelete);
+      setChatToDelete(null);
     }
   };
 
@@ -199,6 +214,22 @@ const AppSidebar = ({
           Logout
         </button>
       </div>
+      <AlertDialog open={!!chatToDelete} onOpenChange={(open) => !open && setChatToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this chat history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 };
