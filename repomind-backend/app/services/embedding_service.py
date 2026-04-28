@@ -35,9 +35,16 @@ async def _no_op_create_extension():
 
 vector_store.acreate_vector_extension = _no_op_create_extension
 
+# Maximum file size to process (500 KB)
+MAX_FILE_SIZE_BYTES = 500 * 1024
+
 # 1. Load, split and store a file
 async def store_file(file_path: str, repo_url: str = ""):
     try:
+        if os.path.getsize(file_path) > MAX_FILE_SIZE_BYTES:
+            print(f"Skipping large file: {file_path}")
+            return
+            
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read().replace("\x00", "")
         
@@ -68,6 +75,10 @@ async def store_files_batch(file_paths: list[str], repo_url: str):
     
     for file_path in file_paths:
         try:
+            if os.path.getsize(file_path) > MAX_FILE_SIZE_BYTES:
+                print(f"Skipping large file: {file_path}")
+                continue
+                
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read().replace("\x00", "")
             
