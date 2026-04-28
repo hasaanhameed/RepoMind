@@ -9,7 +9,7 @@ from git import Repo
 
 # Library for creating tools in LangChain
 from langchain.tools import tool
-from app.services.embedding_service import store_file, delete_repo_data
+from app.services.embedding_service import store_file, store_files_batch, delete_repo_data
 from app.services.ingestion_status_service import ingestion_status_service
 from app.utils.repo_utils import generate_file_tree, SUPPORTED_EXTENSIONS
 
@@ -38,18 +38,22 @@ async def clone_and_embed_repo(github_url: str) -> str:
         
         await ingestion_status_service.update_status(github_url, "embedding", current=0, total=total_files, message="Starting file embedding...")
         
-        for file_path in supported_files:
-            rel_path = os.path.relpath(file_path, temp_dir)
-            await ingestion_status_service.update_status(
-                github_url, 
-                "embedding", 
-                current=embedded_count + 1, 
-                total=total_files, 
-                message=f"Embedding: {rel_path}"
-            )
+        BATCH_SIZE = 10
+        for i in range(0, total_files, BATCH_SIZE):
+            batch_files = supported_files[i:i+BATCH_SIZE]
             
-            await store_file(file_path, github_url)
-            embedded_count += 1
+            if batch_files:
+                rel_path = os.path.relpath(batch_files[0], temp_dir)
+                await ingestion_status_service.update_status(
+                    github_url, 
+                    "embedding", 
+                    current=embedded_count, 
+                    total=total_files, 
+                    message=f"Embedding batch starting with: {rel_path}"
+                )
+                
+                await store_files_batch(batch_files, github_url)
+                embedded_count += len(batch_files)
                     
         await ingestion_status_service.update_status(github_url, "completed", current=total_files, total=total_files, message="Ingestion finished successfully.")
         
