@@ -1,15 +1,19 @@
 import uuid
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from app.core.config import settings
 import os
 
 os.environ["HF_TOKEN"] = settings.HF_TOKEN
 
-# Embedding model
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+# Embedding model (using Inference API to save CPU)
+embeddings = HuggingFaceEndpointEmbeddings(
+    model="sentence-transformers/all-MiniLM-L6-v2",
+    task="feature-extraction",
+    huggingfacehub_api_token=settings.HF_TOKEN
+)
 
 # Text splitter
 text_splitter = RecursiveCharacterTextSplitter(
