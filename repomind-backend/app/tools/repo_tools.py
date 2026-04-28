@@ -18,7 +18,6 @@ async def clone_and_embed_repo(github_url: str) -> str:
     """Clones a GitHub repository and embeds all its code files into the vector database."""
     
     temp_dir = tempfile.mkdtemp()
-    
     try:
         await ingestion_status_service.update_status(github_url, "cloning", message="Cleaning up old data...")
         await delete_repo_data(github_url)
