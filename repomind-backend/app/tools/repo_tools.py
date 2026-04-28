@@ -11,7 +11,7 @@ from git import Repo
 from langchain.tools import tool
 from app.services.embedding_service import store_file, store_files_batch, delete_repo_data
 from app.services.ingestion_status_service import ingestion_status_service
-from app.utils.repo_utils import generate_file_tree, SUPPORTED_EXTENSIONS
+from app.utils.repo_utils import generate_file_tree, SUPPORTED_EXTENSIONS, IGNORE_DIRS, IGNORE_FILES
 
 @tool
 async def clone_and_embed_repo(github_url: str) -> str:
@@ -28,9 +28,9 @@ async def clone_and_embed_repo(github_url: str) -> str:
         # Count total supported files first for progress calculation
         supported_files = []
         for root, dirs, files in os.walk(temp_dir):
-            dirs[:] = [d for d in dirs if d not in [".git", "node_modules", "__pycache__"]]
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
             for file in files:
-                if any(file.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
+                if file not in IGNORE_FILES and any(file.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
                     supported_files.append(os.path.join(root, file))
         
         total_files = len(supported_files)

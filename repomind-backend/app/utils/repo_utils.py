@@ -35,6 +35,15 @@ SUPPORTED_EXTENSIONS = {
     ".sql",
 }
 
+IGNORE_DIRS = {
+    ".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build", 
+    "ios", "android", "windows", "macos", "linux", ".dart_tool", "target", "vendor", ".next"
+}
+
+IGNORE_FILES = {
+    "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "pubspec.lock", "Cargo.lock", "poetry.lock"
+}
+
 def generate_file_tree(start_path):
     """Generates a clean, indented text-based tree of the project structure."""
     tree = []
@@ -48,7 +57,7 @@ def generate_file_tree(start_path):
             return
             
         # Filter out noisy directories
-        items = [item for item in items if item not in [".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build"]]
+        items = [item for item in items if item not in IGNORE_DIRS]
         
         for i, item in enumerate(items):
             path = os.path.join(current_path, item)
@@ -60,7 +69,7 @@ def generate_file_tree(start_path):
                 new_prefix = prefix + ("    " if is_last else "│   ")
                 _walk(path, new_prefix)
             else:
-                if any(item.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
+                if item not in IGNORE_FILES and any(item.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
                     tree.append(f"{prefix}{connector}{item}")
                     
     _walk(start_path)
